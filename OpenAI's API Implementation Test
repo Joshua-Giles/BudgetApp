@@ -1,0 +1,60 @@
+////Imports////
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+//// In this code snippit, We test the OpenAI's API function in how well it can budget for a trip////
+
+public class BudgetAppOpenAI {
+
+    public static void main(String[] args) {
+        //// Prompt that chat gpt will read and answer
+        System.out.println(chatGPT("Hello, I want your opinion for my budget for my trip. My trip is in 8 months. I am flying to the Netherlands and staying in Amsterdam for 5 days then flying home. I currently need to make 2 thousand dollars to afford the trip. I currently make 200 hundred dollars a month. But 50 of it goes to food and another 20 goes to other things. Based on this information, what do you think I should do and can do to make sure I have enough money to afford the trip in time."));
+    }
+
+    public static String chatGPT(String message) {
+        String url = "https://api.openai.com/v1/chat/completions";
+        /////////////////API KEY/////////////////
+        String apiKey = "//API KEY GOES HERE//";
+        /////////////////Chat GPT Version/////////////////
+        String model = "gpt-3.5-turbo"; 
+
+        try {
+            ////HTTP POST request
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Authorization", "Bearer " + apiKey);
+            con.setRequestProperty("Content-Type", "application/json");
+
+            String body = "{\"model\": \"" + model + "\", \"messages\": [{\"role\": \"user\", \"content\": \"" + message + "\"}]}";
+            con.setDoOutput(true);
+            OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
+            writer.write(body);
+            writer.flush();
+            writer.close();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            return extractContentFromResponse(response.toString());
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String extractContentFromResponse(String response) {
+        int startMarker = response.indexOf("content")+11; 
+        int endMarker = response.indexOf("\"", startMarker); 
+        return response.substring(startMarker, endMarker); 
+    }
+}
